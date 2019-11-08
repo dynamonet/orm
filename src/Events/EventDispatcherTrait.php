@@ -35,7 +35,7 @@ trait EventDispatcherTrait
         //to-do
     }
 
-    public function dispatch(EventData $event)
+    public function dispatch(Event $event)
     {
         $eventName = $event->getName();
 
