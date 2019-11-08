@@ -6,6 +6,11 @@
         "ext-PDO": "^7.3",
         "ext-ds": "^1.2"
     },
+    "autoload": {
+        "psr-4": {
+            "Dynamo\\ORM\\": "src/"
+        }
+    },
     "license": "MIT",
     "authors": [
         {
