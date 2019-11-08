@@ -1,0 +1,16 @@
+{
+    "name": "dynamonet/orm",
+    "description": "Fluent Query Builder and ActiveRecord-based ORM for PHP 7",
+    "type": "library",
+    "require": {
+        "ext-PDO": "^7.3",
+        "ext-ds": "^1.2"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dynamo IT",
+            "email": "info@dynamonet.com.ar"
+        }
+    ]
+}
