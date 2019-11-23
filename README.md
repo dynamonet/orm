@@ -30,3 +30,9 @@ $users = (new Query)
   ], false) // false "OR's" all the previous conditions. Default is true, which will "AND" all the conditions. 
   ->all(); // Fetches all the results
 ```
+
+### Installing
+
+```php
+composer require dynamonet/orm
+```
