@@ -36,3 +36,45 @@ $users = (new Query)
 ```php
 composer require dynamonet/orm
 ```
+
+### Defining Models
+Your database models classes should extend the ```Dynamo\ORM\ActiveModel``` class:
+
+```php
+<?php
+
+namespace MyApp;
+
+use Dynamo\ORM\ActiveModel;
+
+class User extends ActiveModel
+{
+    //
+}
+```
+By convention, the "snake case" name of the class will be used as the table name. If you want to specify a different table name, you can do so by simply overriding the static "getTableName" method:
+
+```php
+<?php
+
+namespace MyApp;
+
+use Dynamo\ORM\ActiveModel;
+
+class User extends ActiveModel
+{
+    public static function getTableName()
+    {
+        return 'my_users_table';
+    }
+}
+```
+
+### Relationships
+Defining relationships is done quite the same way you would in Yii2's ORM or Eloquent.
+
+#### one-to-one relationships
+(work in progress)
+
+
+
