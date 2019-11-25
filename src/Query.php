@@ -115,6 +115,14 @@ class Query implements \IteratorAggregate
     }
 
     /**
+     * Gets the params for the prepared PDO statement
+     */
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    /**
      * @param string $table
      * @param string $alias
      *
@@ -236,34 +244,35 @@ class Query implements \IteratorAggregate
         return $this;
     }
 
-    public function delete(string $table, ?int $id = null): self
+    public function delete(string $table): self
     {
         $this->delete = $table;
-
-        if ($id) {
-            $this->where('id = :id');
-            $this->params(['id' => $id]);
-        }
 
         return $this;
     }
 
     /**
-     * @param string ...$conditions
+     * @param string|array $conditions
      *
      * @return \Dynamo\ORM\Query
      */
-    public function where($conditions, $operator = 'AND'): self
+    public function where(array $conditions, bool $and): self
     {
         if($conditions !== null){
+
             if($this->where == null){
-                $this->where = new ConditionBlock($conditions, $operator);
+                $this->where = new ConditionBlock($conditions, $and);
             } else {
                 $this->where->append($conditions);
             }
         }
 
         return $this;
+    }
+
+    public function andWhere()
+    {
+        
     }
 
     /**
@@ -453,6 +462,14 @@ class Query implements \IteratorAggregate
      */
     public function __toString()
     {
+        return $this->getSql(false);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSql(bool $prepared = false)
+    {
         $parts = ['SELECT'];
 
         if ($this->select && count($this->select) > 0) {
@@ -509,7 +526,7 @@ class Query implements \IteratorAggregate
         //if (!empty($this->where)) {
         if ($this->where != null) {
             $parts[] = 'WHERE';
-            $parts[] = (string) $this->where; //'(' . implode(') AND (', $this->where) . ')';
+            $parts[] = $this->where->toString($prepared); //'(' . implode(') AND (', $this->where) . ')';
         }
 
         if ($this->order) {

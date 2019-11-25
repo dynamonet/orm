@@ -4,80 +4,97 @@ namespace Dynamo\ORM;
 
 /**
  * Represents a block of SQL conditions.
- * @author Edu
+ * @author Eduardo Rodriguez Da Silva
  */
 class ConditionBlock
 {
     protected $conditions;
-    protected $operator;
+    protected $and;
+    protected $bindings;
 
-    public function __construct($conditions, $operator = 'AND')
+    public function __construct(array $conditions, bool $and = true)
     {
-        $this->conditions = is_string($conditions) ?
-            [ $conditions ] :
-            $conditions;
-        $this->operator = $operator;
+        $this->and = $and;
+        $this->bindings = [];
+        $this->conditions = [];
+
+        foreach($conditions as $key => $value){
+            if(\is_numeric($key)){
+                if(is_string($value)){
+                    $this->conditions[] = $value;
+                } else if(is_array($value) && count($value) == 3){
+                    //caso [ columna, operador, valorDeseado ]
+                    $this->conditions[] = new SqlCondition(...$value);
+                } else {
+                    throw new \Exception("Unexpected condition format");
+                }
+            } else if(is_string($key)) {
+
+                $field = $key;
+
+                // Determine operator
+                if(
+                    \strpos($key, ' ') > 0 &&
+                    \preg_match(
+                        '/\s+(!=|<>|>|>=|<|<=|IN|NOT IN|LIKE|NOT LIKE|BETWEEN)\s*$/i',
+                        $key,
+                        $matches
+                    )
+                ){
+                    $field = \substr($key, 0, -\strlen($matches[0]));
+                    $operator = $matches[1];
+                } else if($value === null){
+                    $operator = 'IS';
+                } else if(\is_array($value)){
+                    $operator = 'IN';
+                } else {
+                    $operator = '=';
+                }
+
+                $this->conditions[] = new SqlCondition($field, $operator, $value);
+            } else {
+                throw new \Exception("Not implemented 2!");
+            }
+        }
     }
 
-    public function __toString()
+    public function toString(bool $prepare = true){
+        return implode(
+            ( $this->and ? ' AND ' : ' OR ' ),
+            array_map(
+                function($condition) use ($prepare){
+                    return $condition->toString($prepare);
+                },
+                $this->conditions
+            )
+        );
+    }
+
+    public function __toString() : string
     {
         return '(' .
             implode(
-                " {$this->operator} ",
+                ( $this->and ? ' AND ' : ' OR '),
                 $this->parse($this->conditions)
             ) .
             ')';
+    }
+
+    public function isAnd() : bool
+    {
+        return $this->and;
     }
 
     /**
      * Converts $conditions into an associative array of conditions
      * @param string|array $conditions
      */
-    protected function parse($conditions, $operator = 'AND')
+    protected function parse($conditions)
     {
         $result = [];
 
-        if(\is_numeric($conditions)){
-            $result = [ sprintf("id = %d", $conditions) ];
-        } else if(is_array($conditions)){
-            foreach($conditions as $key => $value){
-                if(\is_numeric($key)){
-                    if(\is_numeric($value)){
-                        $result[] = sprintf("id = %d", $value);
-                    } else if(is_string($value)){
-                        $result[] = $value;
-                    } else if(is_array($value) && count($value) == 3){
-                        //caso [ columna, operador, valorDeseado ]
-                        $result[] = sprintf("%s %s '%s'", ...$value);
-                    } else {
-                        throw new \Exception("Unexpected condition format");
-                    }
-                } else if(is_string($key)) {
-                    if(is_array($value)){
-                        $result[] = sprintf(
-                            "%s IN(%s)",
-                            $key,
-                            implode(
-                                ', ',
-                                array_map(
-                                    function($e){
-                                        if(\is_numeric($e)){
-                                            return $e;
-                                        }
-                                        return "'{$e}'";
-                                    },
-                                    $value
-                                )
-                            )
-                        );
-                    } else {
-                        $result[] = sprintf("%s = '%s'", $key, $value);
-                    }
-                } else {
-                    throw new \Exception("Not implemented 2!");
-                }
-            }
-        }
+            
+        
 
         return $result;
     }
